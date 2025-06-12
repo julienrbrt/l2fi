@@ -1,9 +1,11 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"math/big"
 	"net/http"
@@ -15,6 +17,12 @@ import (
 	"github.com/julienrbrt/l2fi/config"
 	"github.com/julienrbrt/l2fi/l2"
 )
+
+//go:embed templates/*.html
+var templatesFS embed.FS
+
+//go:embed static/*
+var staticFS embed.FS
 
 func main() {
 	port := flag.Int("port", 8080, "Port to listen on")
@@ -30,11 +38,19 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// Serve static files
-	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	// Serve static files from embed
+	staticSub, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		log.Fatalf("Failed to get static sub FS: %v", err)
+	}
+	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticSub))))
 
-	// Template setup
-	tmpl := template.Must(template.ParseGlob("templates/*.html"))
+	// Template setup using embed
+	tmplFS, err := fs.Sub(templatesFS, "templates")
+	if err != nil {
+		log.Fatalf("Failed to get templates sub FS: %v", err)
+	}
+	tmpl := template.Must(template.ParseFS(tmplFS, "*.html"))
 
 	// Routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {

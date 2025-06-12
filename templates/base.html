@@ -347,26 +347,52 @@
 
       <!-- Side info panels -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl w-full">
-        <!-- Network Status -->
+        <!-- Network Widget -->
         <div class="win95-window p-1">
           <div class="win95-title-bar mb-1">
-            <span>🌐 Network Status</span>
+            <span>🌐 Network Widget</span>
           </div>
-          <div class="p-3 bg-[#c0c0c0] text-xs">
-            <div class="space-y-2">
-              {{ range $_, $chain := .Chains }}
-              <div class="flex justify-between">
-                <span
-                  >🟢{{ if $chain.DisplayName }} {{ $chain.DisplayName }} {{
-                  else }} {{ $chain.Name }} {{ end }}:
-                </span>
-                <span class="text-green-600 font-bold">Online</span>
+          <div class="p-3 bg-[#c0c0c0] text-xs flex flex-col items-center">
+            <div class="mb-2 text-2xl">🖧</div>
+            <div class="font-bold mb-1 text-blue-800">You are online</div>
+            <div class="text-green-700 mb-2">Connection looks good!</div>
+            <div class="w-full bg-white win95-border-inset p-2 mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-green-600">●</span>
+                <span class="text-xs"
+                  >Local time: <span id="localTime"></span
+                ></span>
               </div>
-              {{ end }}
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-blue-600">⏱️</span>
+                <span class="text-xs">Uptime: <span id="uptime"></span></span>
+              </div>
+            </div>
+            <div class="text-gray-600 text-xs">
+              No external checks required.
             </div>
           </div>
         </div>
-
+        <script>
+          // Update local time and uptime
+          (function () {
+            const start = Date.now();
+            function updateStatusWidget() {
+              const now = new Date();
+              document.getElementById("localTime").textContent =
+                now.toLocaleTimeString();
+              const uptimeSec = Math.floor((Date.now() - start) / 1000);
+              const h = Math.floor(uptimeSec / 3600);
+              const m = Math.floor((uptimeSec % 3600) / 60);
+              const s = uptimeSec % 60;
+              document.getElementById(
+                "uptime"
+              ).textContent = `${h}h ${m}m ${s}s`;
+            }
+            setInterval(updateStatusWidget, 1000);
+            updateStatusWidget();
+          })();
+        </script>
         <!-- Quick Tips -->
         <div class="win95-window p-1">
           <div class="win95-title-bar mb-1">
