@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L2 Force Inclusion</title>
+    <link href="/static/css/output.css" rel="stylesheet" />
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <script src="/static/js/htmx.min.js"></script>
+    <script src="/static/js/ethers.umd.min.js"></script>
+    <style>
+      body {
+        font-family: "MS Sans Serif", sans-serif; /* Classic Win95 font */
+        font-size: 11px;
+        cursor: default;
+      }
+      .win95-border {
+        border-style: solid;
+        border-width: 2px;
+        border-top-color: #ffffff;
+        border-left-color: #ffffff;
+        border-bottom-color: #808080;
+        border-right-color: #808080;
+      }
+      .win95-border-inset {
+        border-style: solid;
+        border-width: 2px;
+        border-top-color: #808080;
+        border-left-color: #808080;
+        border-bottom-color: #ffffff;
+        border-right-color: #ffffff;
+      }
+      .win95-button {
+        background-color: #c0c0c0; /* Standard Win95 grey */
+        border-style: solid;
+        border-width: 2px;
+        border-top-color: #ffffff;
+        border-left-color: #ffffff;
+        border-bottom-color: #808080;
+        border-right-color: #808080;
+        padding: 4px 8px;
+        box-shadow: 1px 1px 0px #000000;
+        font-family: "MS Sans Serif", sans-serif;
+        font-size: 11px;
+        cursor: pointer;
+      }
+      .win95-button:active {
+        border-top-color: #808080;
+        border-left-color: #808080;
+        border-bottom-color: #ffffff;
+        border-right-color: #ffffff;
+        box-shadow: none;
+        transform: translate(1px, 1px);
+      }
+      .win95-button:disabled {
+        background-color: #c0c0c0;
+        color: #808080;
+        cursor: not-allowed;
+      }
+      .win95-window {
+        background-color: #c0c0c0;
+        border: 2px outset #c0c0c0;
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .win95-title-bar {
+        background: linear-gradient(90deg, #0000ff 0%, #000080 100%);
+        color: white;
+        padding: 2px 4px;
+        font-weight: bold;
+        font-size: 11px;
+        border-bottom: 1px solid #808080;
+      }
+      .win95-desktop {
+        background-color: #008080;
+        background-image: radial-gradient(
+            circle at 25% 25%,
+            rgba(255, 255, 255, 0.1) 1px,
+            transparent 1px
+          ),
+          radial-gradient(
+            circle at 75% 75%,
+            rgba(255, 255, 255, 0.05) 1px,
+            transparent 1px
+          );
+        background-size: 40px 40px;
+      }
+      .win95-form-field {
+        background-color: white;
+        border: 1px inset #c0c0c0;
+        padding: 2px 4px;
+        font-family: "MS Sans Serif", sans-serif;
+        font-size: 11px;
+      }
+      .loading-spinner {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #c0c0c0;
+        border-top: 2px solid #000080;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+      .loading-spinner.show {
+        display: block;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .transaction-success {
+        animation: flash-green 0.5s ease-in-out;
+      }
+      @keyframes flash-green {
+        0% {
+          background-color: white;
+        }
+        50% {
+          background-color: #90ee90;
+        }
+        100% {
+          background-color: white;
+        }
+      }
+      .transaction-error {
+        animation: flash-red 0.5s ease-in-out;
+      }
+      @keyframes flash-red {
+        0% {
+          background-color: white;
+        }
+        50% {
+          background-color: #ffb6c1;
+        }
+        100% {
+          background-color: white;
+        }
+      }
+      .signing-effect {
+        position: relative;
+        overflow: hidden;
+      }
+      .signing-effect::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.4),
+          transparent
+        );
+        animation: signing-shimmer 2s infinite;
+      }
+      @keyframes signing-shimmer {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body class="win95-desktop min-h-screen flex flex-col text-black">
+    <!-- Windows 95 desktop background -->
+    <header class="win95-title-bar">
+      <div class="flex items-center">
+        <span class="text-white font-bold">L2 Force Inclusion Tool</span>
+      </div>
+    </header>
+    <main class="flex-1 p-4 flex flex-col items-center justify-start">
+      <!-- Main application window -->
+      <div class="win95-window p-1 max-w-2xl w-full mb-4">
+        <!-- Window title bar -->
+        <div class="win95-title-bar mb-1">
+          <span>🚀 L2 Force Inclusion Tool v1.0</span>
+        </div>
+        <!-- Window content -->
+        <div class="p-4 bg-[#c0c0c0] space-y-4">
+          <!-- Wallet Connection Status -->
+          <div class="win95-border-inset bg-white p-3 text-xs">
+            <div class="font-bold mb-2 text-blue-800">🔗 Wallet Connection</div>
+            <div id="walletStatus" class="text-gray-700">
+              <div class="text-center py-2">
+                <div class="text-orange-600">⏳ Connecting to wallet...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info panel -->
+          <div class="win95-border-inset bg-white p-3 text-xs">
+            <div class="font-bold mb-2 text-blue-800">
+              ℹ️ About Force Inclusion
+            </div>
+            <div class="text-gray-700 leading-relaxed">
+              Force inclusion allows you to bypass potential L2 sequencer
+              censorship by submitting transactions directly to L1. This tool
+              builds the appropriate L1 transaction that will force your L2
+              transaction to be included.
+            </div>
+          </div>
+
+          <!-- Parameters section -->
+          <div class="win95-border p-3 bg-[#c0c0c0]">
+            <div class="font-bold mb-3 text-sm">📋 Transaction Parameters</div>
+
+            <form
+              id="forceInclusionForm"
+              hx-post="/force-inclusion"
+              hx-target="#result"
+              hx-swap="innerHTML"
+              hx-indicator="#spinner"
+              class="space-y-3"
+            >
+              <!-- Hidden field for user address -->
+              <input
+                type="hidden"
+                id="fromAddress"
+                name="from_address"
+                value=""
+              />
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label
+                    for="l2"
+                    class="block text-xs text-black mb-1 font-bold"
+                    >🌐 L2 Network:</label
+                  >
+                  <select id="l2" name="l2" class="w-full win95-form-field">
+                    {{ range $_, $chain := .Chains }}
+                    <option
+                      value="{{ $chain.Name }}"
+                      class="text-black bg-white"
+                    >
+                      {{ if $chain.DisplayName }} {{ $chain.DisplayName }} {{
+                      else }} {{ $chain.Name }} {{ end }}
+                    </option>
+                    {{ end }}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    for="gas_limit"
+                    class="block text-xs text-black mb-1 font-bold"
+                    >⛽ L2 Gas Limit:</label
+                  >
+                  <input
+                    type="number"
+                    id="gas_limit"
+                    name="gas_limit"
+                    class="w-full win95-form-field"
+                    value="200000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  for="to_address"
+                  class="block text-xs text-black mb-1 font-bold"
+                  >📍 L2 Recipient Address:</label
+                >
+                <input
+                  type="text"
+                  id="to_address"
+                  name="to_address"
+                  class="w-full win95-form-field"
+                  placeholder="0x742f35Cc6634C0532925a3b8d0821140d6F5eD8F"
+                  required
+                />
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label
+                    for="value"
+                    class="block text-xs text-black mb-1 font-bold"
+                    >💰 Value (Wei):</label
+                  >
+                  <input
+                    type="number"
+                    id="value"
+                    name="value"
+                    class="w-full win95-form-field"
+                    placeholder="0"
+                    value="0"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    for="data"
+                    class="block text-xs text-black mb-1 font-bold"
+                    >📄 Data (Hex):</label
+                  >
+                  <input
+                    type="text"
+                    id="data"
+                    name="data"
+                    class="w-full win95-form-field"
+                    placeholder="0x (optional)"
+                  />
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2 mt-4">
+                <button
+                  type="submit"
+                  class="win95-button text-black flex-1 font-bold"
+                >
+                  🔨 Build L1 Transaction
+                </button>
+                <div id="spinner" class="loading-spinner htmx-indicator"></div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Result area -->
+          <div class="win95-border p-3 bg-[#c0c0c0]">
+            <div class="font-bold mb-2 text-sm">📤 Transaction Output</div>
+            <div
+              id="result"
+              class="bg-white win95-border-inset min-h-[120px] p-3 text-xs"
+            >
+              <div class="text-gray-500 text-center py-8">
+                <div class="text-2xl mb-2">⚙️</div>
+                <div>
+                  Configure parameters above and click "Build L1 Transaction"
+                </div>
+                <div class="text-xs mt-1 text-gray-400">
+                  Your transaction will appear here...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side info panels -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl w-full">
+        <!-- Network Status -->
+        <div class="win95-window p-1">
+          <div class="win95-title-bar mb-1">
+            <span>🌐 Network Status</span>
+          </div>
+          <div class="p-3 bg-[#c0c0c0] text-xs">
+            <div class="space-y-2">
+              {{ range $_, $chain := .Chains }}
+              <div class="flex justify-between">
+                <span
+                  >🟢{{ if $chain.DisplayName }} {{ $chain.DisplayName }} {{
+                  else }} {{ $chain.Name }} {{ end }}:
+                </span>
+                <span class="text-green-600 font-bold">Online</span>
+              </div>
+              {{ end }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="win95-window p-1">
+          <div class="win95-title-bar mb-1">
+            <span>💡 Quick Tips</span>
+          </div>
+          <div class="p-3 bg-[#c0c0c0] text-xs">
+            <div class="space-y-2">
+              <div>• Use force inclusion when your tx is censored</div>
+              <div>• L1 gas fees will be higher than normal L2</div>
+              <div>• Transaction will be included in next L2 batch</div>
+              <div>• Ensure you have enough ETH for L1 gas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer
+      class="bg-[#c0c0c0] text-black p-2 text-xs win95-border text-center"
+    >
+      <p>
+        © 2025
+        <a href="https://julien.rbrt.fr" class="text-blue-700 hover:underline"
+          >julien.rbrt.fr</a
+        >
+      </p>
+    </footer>
+
+    <script>
+      // Global variables
+      let userAddress = null;
+      let provider = null;
+
+      // Function to trigger BSOD
+      function triggerBSOD(errorType, errorMessage) {
+        const params = new URLSearchParams({
+          type: errorType,
+          message: errorMessage,
+        });
+        window.location.href = `/bsod?${params.toString()}`;
+      }
+
+      // Connect to wallet on page load
+      async function connectWallet() {
+        const walletStatus = document.getElementById("walletStatus");
+        const fromAddressInput = document.getElementById("fromAddress");
+        const form = document.getElementById("forceInclusionForm");
+
+        if (!window.ethereum) {
+          // Trigger BSOD for missing wallet
+          triggerBSOD(
+            "NO_WALLET_DETECTED",
+            "No Web3 wallet extension detected in your browser. Please install Rabby Wallet, MetaMask, or another compatible Web3 wallet extension and refresh the page."
+          );
+          return;
+        }
+
+        try {
+          walletStatus.innerHTML = `
+            <div class="text-blue-600 text-center py-2">
+              <div>🔄 Requesting wallet access...</div>
+            </div>
+          `;
+
+          provider = new ethers.BrowserProvider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
+          userAddress = accounts[0];
+
+          // Update hidden input
+          fromAddressInput.value = userAddress;
+
+          // Show connected status
+          walletStatus.innerHTML = `
+            <div class="text-green-600">
+              <div class="font-bold mb-1">✅ Wallet Connected</div>
+              <div class="bg-gray-50 win95-border-inset p-2">
+                <div class="text-xs text-gray-600 mb-1">Your Address:</div>
+                <div class="font-mono text-xs break-all">${userAddress}</div>
+              </div>
+              <button onclick="disconnectWallet()" class="win95-button text-xs mt-2">
+                🔌 Disconnect
+              </button>
+            </div>
+          `;
+
+          // Enable form
+          if (form) {
+            form.style.opacity = "1";
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = "🔨 Build L1 Transaction";
+            }
+          }
+        } catch (error) {
+          // Trigger BSOD for wallet connection errors
+          let errorMessage = "Failed to connect to your Web3 wallet. ";
+
+          if (error.code === 4001) {
+            errorMessage +=
+              "User rejected the connection request. Please try again and approve the connection.";
+          } else if (error.code === -32002) {
+            errorMessage +=
+              "A connection request is already pending. Please check your wallet for pending requests.";
+          } else if (error.message.includes("User rejected")) {
+            errorMessage += "Connection was rejected by user.";
+          } else {
+            errorMessage += `Error details: ${error.message}`;
+          }
+
+          triggerBSOD("WALLET_CONNECTION_FAILED", errorMessage);
+        }
+      }
+
+      // Disconnect wallet
+      function disconnectWallet() {
+        userAddress = null;
+        provider = null;
+        document.getElementById("fromAddress").value = "";
+
+        const walletStatus = document.getElementById("walletStatus");
+        walletStatus.innerHTML = `
+          <div class="text-gray-600 text-center py-2">
+            <div class="font-bold">🔌 Wallet Disconnected</div>
+            <button onclick="connectWallet()" class="win95-button text-xs mt-2">
+              🔗 Connect Wallet
+            </button>
+          </div>
+        `;
+
+        // Disable form
+        const form = document.getElementById("forceInclusionForm");
+        if (form) {
+          form.style.opacity = "0.5";
+          const submitButton = form.querySelector('button[type="submit"]');
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "❌ Wallet Required";
+          }
+        }
+      }
+
+      // Handle account changes
+      if (window.ethereum) {
+        window.ethereum.on("accountsChanged", function (accounts) {
+          if (accounts.length === 0) {
+            // Wallet disconnected - trigger BSOD
+            triggerBSOD(
+              "WALLET_DISCONNECTED",
+              "Your wallet has been disconnected unexpectedly. This could be due to network issues or manual disconnection. Please reconnect your wallet and try again."
+            );
+          } else {
+            userAddress = accounts[0];
+            document.getElementById("fromAddress").value = userAddress;
+            // Update display
+            connectWallet();
+          }
+        });
+
+        // Handle network changes
+        window.ethereum.on("chainChanged", function (chainId) {
+          // Reload the page when network changes to ensure consistency
+          window.location.reload();
+        });
+      }
+
+      // Initialize when page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        connectWallet();
+      });
+    </script>
+  </body>
+</html>

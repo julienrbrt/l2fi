@@ -1,0 +1,218 @@
+{{ if .Error }}
+<div class="bg-red-100 win95-border-inset p-3">
+  <div class="text-red-700 font-bold text-xs mb-1">❌ Error Occurred</div>
+  <div class="text-red-600 text-xs">{{ .Error }}</div>
+</div>
+{{ else }}
+<div class="space-y-3">
+  <div class="bg-green-100 win95-border-inset p-2">
+    <div class="text-green-700 text-xs font-bold">
+      ✅ L1 Transaction Built Successfully
+    </div>
+    <div class="text-green-600 text-xs mt-1">
+      Ready for wallet signing and submission to L1
+    </div>
+  </div>
+
+  <!-- Transaction summary -->
+  <div class="win95-border bg-gray-50 p-3">
+    <div class="text-xs font-bold mb-2 text-blue-800">
+      📋 Transaction Summary
+    </div>
+    <div class="grid grid-cols-2 gap-2 text-xs">
+      <div><span class="font-bold">Network:</span> L1 → L2</div>
+      <div><span class="font-bold">Type:</span> Force Inclusion</div>
+      <div>
+        <span class="font-bold">Status:</span>
+        <span class="text-orange-600">Pending Signature</span>
+      </div>
+      <div>
+        <span class="font-bold">Gas:</span>
+        <span class="text-red-600">High (L1)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transaction details -->
+  <div class="win95-border-inset bg-white p-3">
+    <div class="text-xs text-gray-600 mb-2 font-bold">
+      🔍 Raw Transaction Data:
+    </div>
+    <pre
+      class="text-xs font-mono text-black overflow-x-auto bg-gray-50 win95-border-inset p-2 max-h-40 whitespace-pre-wrap"
+    >
+{{ .Tx }}</pre
+    >
+  </div>
+
+  <!-- Action section -->
+  <div class="win95-border bg-yellow-50 p-3">
+    <div class="text-xs font-bold mb-2 text-orange-800">⚠️ Important</div>
+    <div class="text-xs text-gray-700 mb-3">
+      This transaction will be submitted to L1 Ethereum mainnet. L1 gas fees
+      will be higher than normal L2 transactions.
+    </div>
+
+    <button
+      id="signButton"
+      onclick="signAndSend('{{ .Tx | html }}')"
+      class="win95-button text-black w-full text-xs font-bold"
+    >
+      🔐 Sign & Submit to L1
+    </button>
+  </div>
+
+  <!-- Status area -->
+  <div id="signStatus" class="min-h-[20px] text-xs"></div>
+</div>
+
+<script>
+  // Function to trigger BSOD
+  function triggerBSOD(errorType, errorMessage) {
+    const params = new URLSearchParams({
+      type: errorType,
+      message: errorMessage,
+    });
+    window.location.href = `/bsod?${params.toString()}`;
+  }
+
+  async function signAndSend(txJson) {
+    const button = document.getElementById("signButton");
+    const status = document.getElementById("signStatus");
+    const result = document.getElementById("result");
+
+    // Add signing effect
+    button.disabled = true;
+    button.innerHTML = "⏳ Signing...";
+    button.classList.add("signing-effect");
+    result.classList.add("signing-effect");
+
+    status.innerHTML =
+      '<div class="text-blue-600">🔄 Connecting to wallet...</div>';
+
+    if (!window.ethereum) {
+      triggerBSOD(
+        "NO_WALLET_DETECTED",
+        "No Web3 wallet detected during transaction signing. Please install a Web3 wallet extension and refresh the page."
+      );
+      return;
+    }
+
+    try {
+      status.innerHTML =
+        '<div class="text-blue-600">🔄 Requesting wallet access...</div>';
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      status.innerHTML =
+        '<div class="text-blue-600">🔄 Preparing transaction...</div>';
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Small delay for effect
+
+      const tx = JSON.parse(txJson);
+
+      status.innerHTML =
+        '<div class="text-blue-600">🔄 Please confirm in wallet...</div>';
+
+      const txResponse = await signer.sendTransaction({
+        to: tx.to,
+        data: tx.data,
+        gasLimit: tx.gasLimit,
+        gasPrice: tx.gasPrice,
+        nonce: tx.nonce,
+        value: tx.value,
+      });
+
+      // Success effect
+      result.classList.remove("signing-effect");
+      result.classList.add("transaction-success");
+
+      status.innerHTML = `
+        <div class="bg-green-100 win95-border-inset p-3">
+          <div class="text-green-700 font-bold text-xs mb-1">✅ Transaction Submitted!</div>
+          <div class="text-xs mb-2">Your force inclusion transaction has been sent to L1</div>
+          <div class="bg-white win95-border-inset p-2">
+            <div class="text-xs font-bold mb-1">📄 Transaction Hash:</div>
+            <div class="font-mono text-xs break-all">${txResponse.hash}</div>
+          </div>
+          <div class="text-xs text-gray-600 mt-2">
+            ℹ️ Your L2 transaction will be included in the next batch processing
+          </div>
+        </div>
+      `;
+
+      button.innerHTML = "✅ Signed Successfully";
+
+      setTimeout(() => {
+        result.classList.remove("transaction-success");
+      }, 500);
+    } catch (err) {
+      // Check if this is a critical wallet/signing error that should trigger BSOD
+      const isCriticalError =
+        err.code === 4001 || // User rejected
+        err.code === -32003 || // Transaction rejected
+        err.code === -32000 || // Execution error
+        err.message.includes("User denied") ||
+        err.message.includes("user rejected") ||
+        err.message.includes("insufficient funds") ||
+        err.message.includes("nonce too low") ||
+        err.message.includes("replacement transaction underpriced") ||
+        err.message.includes("gas required exceeds allowance") ||
+        err.message.includes("execution reverted") ||
+        err.message.includes("invalid transaction") ||
+        err.message.includes("wallet_requestPermissions") ||
+        err.message.includes("MetaMask") ||
+        err.message.includes("wallet");
+
+      if (isCriticalError) {
+        let errorMessage =
+          "A critical error occurred during transaction signing. ";
+
+        if (err.code === 4001) {
+          errorMessage +=
+            "Transaction was rejected by the user. If this was accidental, please try again.";
+        } else if (err.message.includes("insufficient funds")) {
+          errorMessage +=
+            "Insufficient ETH balance to pay for gas fees. Please add more ETH to your wallet.";
+        } else if (err.message.includes("nonce too low")) {
+          errorMessage +=
+            "Transaction nonce error. Your wallet may have pending transactions.";
+        } else if (err.message.includes("gas required exceeds allowance")) {
+          errorMessage +=
+            "Gas limit too low for this transaction. Try increasing the gas limit.";
+        } else {
+          errorMessage += `Error details: ${err.message}`;
+        }
+
+        triggerBSOD("TRANSACTION_SIGNING_ERROR", errorMessage);
+        return;
+      }
+
+      // For non-critical errors, show normal error UI
+      result.classList.remove("signing-effect");
+      result.classList.add("transaction-error");
+
+      status.innerHTML = `
+        <div class="bg-red-100 win95-border-inset p-3">
+          <div class="text-red-700 font-bold text-xs mb-1">❌ Transaction Failed</div>
+          <div class="text-xs mb-2">Unable to submit force inclusion transaction</div>
+          <div class="bg-white win95-border-inset p-2">
+            <div class="text-xs font-bold mb-1">Error Details:</div>
+            <div class="text-xs">${err.message}</div>
+          </div>
+          <div class="text-xs text-gray-600 mt-2">
+            💡 Try checking your wallet connection and L1 ETH balance
+          </div>
+        </div>
+      `;
+
+      button.disabled = false;
+      button.innerHTML = "🔐 Try Again";
+
+      setTimeout(() => {
+        result.classList.remove("transaction-error");
+      }, 500);
+    }
+  }
+</script>
+{{ end }}

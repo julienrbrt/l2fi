@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>System Error - L2FI</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "MS Sans Serif", sans-serif; /* Classic Win95 font */
+        background-color: #0000aa;
+        color: white;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 999999;
+      }
+
+      .bsod-container {
+        padding: 40px;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #0000aa;
+      }
+
+      .bsod-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-align: center;
+        letter-spacing: 2px;
+      }
+
+      .bsod-content {
+        font-size: 16px;
+        line-height: 1.8;
+        margin-bottom: 30px;
+        white-space: pre-line;
+      }
+
+      .error-code {
+        background-color: white;
+        color: #0000aa;
+        padding: 2px 6px;
+        font-weight: bold;
+        display: inline-block;
+        margin: 5px 0;
+      }
+
+      .bsod-footer {
+        position: absolute;
+        bottom: 40px;
+        left: 40px;
+        right: 40px;
+        font-size: 14px;
+        text-align: center;
+        border-top: 1px solid white;
+        padding-top: 20px;
+      }
+
+      .cursor {
+        animation: blink 1s infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .reload-hint {
+        margin-top: 20px;
+        font-size: 14px;
+        text-align: center;
+        opacity: 0.8;
+      }
+
+      @media (max-width: 768px) {
+        .bsod-container {
+          padding: 20px;
+        }
+
+        .bsod-title {
+          font-size: 18px;
+        }
+
+        .bsod-content {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bsod-container">
+      <div class="bsod-title">
+        A problem has been detected and L2FI has been shut down to prevent
+        damage to your transaction.
+      </div>
+
+      <div class="bsod-content">
+        The problem seems to be caused by the following error:
+
+        <span class="error-code">{{ .ErrorType }}</span>
+
+        {{ .ErrorMessage }} If this is the first time you've seen this error
+        screen, try the following steps: * Check that your wallet is properly
+        connected and unlocked * Ensure you have sufficient ETH balance for gas
+        fees * Verify your wallet supports the required network * Try refreshing
+        the page and reconnecting your wallet If problems continue, disable or
+        remove any recently installed wallet extensions. Check your browser
+        console for additional error details. Technical information: *** STOP:
+        0x{{ .ErrorCode }} ({{ .ErrorDetails }}) *** {{ .ModuleName }} - Address
+        {{ .ErrorAddress }} base at {{ .BaseAddress }}, DateStamp {{ .DateStamp
+        }}
+      </div>
+
+      <div class="bsod-footer">
+        Beginning physical memory dump<span class="cursor">_</span>
+        <div class="reload-hint">
+          Press F5 to reload the application or close this tab to exit
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Allow f5 or escape key to close BSOD
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" || e.key === "F5") {
+          history.back();
+        }
+      });
+
+      // Auto-reload after 30 seconds
+      setTimeout(() => {
+        if (
+          confirm(
+            "Auto-reload in progress. Click OK to reload now or Cancel to stay on this screen."
+          )
+        ) {
+          history.back();
+        }
+      }, 30000);
+
+      // Prevent right-click context menu
+      document.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+      });
+    </script>
+  </body>
+</html>
