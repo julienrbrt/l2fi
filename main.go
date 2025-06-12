@@ -41,9 +41,26 @@ func main() {
 		_ = tmpl.ExecuteTemplate(w, "base.html", appConfig)
 	})
 
-	r.Get("/bsod", func(w http.ResponseWriter, r *http.Request) {
-		errorType := r.URL.Query().Get("type")
-		errorMessage := r.URL.Query().Get("message")
+	r.Post("/bsod", func(w http.ResponseWriter, r *http.Request) {
+		data := map[string]any{
+			"ErrorType":    "INVALID_REQUEST",
+			"ErrorMessage": "Could not parse error form.",
+			"ErrorCode":    "0x000000EA",
+			"ErrorDetails": "WALLET_DRIVER_IRQL_NOT_LESS_OR_EQUAL",
+			"ModuleName":   "web3wallet.sys",
+			"ErrorAddress": "0xFFFFF800`12345678",
+			"BaseAddress":  "0xFFFFF800`12300000",
+			"DateStamp":    "0x12345678",
+		}
+
+		if err := r.ParseForm(); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = tmpl.ExecuteTemplate(w, "bsod.html", data)
+			return
+		}
+
+		errorType := r.FormValue("type")
+		errorMessage := r.FormValue("message")
 
 		if errorType == "" {
 			errorType = "WALLET_CONNECTION_ERROR"
@@ -52,16 +69,8 @@ func main() {
 			errorMessage = "An unknown wallet or signing error occurred."
 		}
 
-		data := map[string]any{
-			"ErrorType":    errorType,
-			"ErrorMessage": errorMessage,
-			"ErrorCode":    "0x000000EA",
-			"ErrorDetails": "WALLET_DRIVER_IRQL_NOT_LESS_OR_EQUAL",
-			"ModuleName":   "web3wallet.sys",
-			"ErrorAddress": "0xFFFFF800`12345678",
-			"BaseAddress":  "0xFFFFF800`12300000",
-			"DateStamp":    "0x12345678",
-		}
+		data["ErrorType"] = errorType
+		data["ErrorMessage"] = errorMessage
 
 		_ = tmpl.ExecuteTemplate(w, "bsod.html", data)
 	})
@@ -131,14 +140,14 @@ func main() {
 
 		switch chainType {
 		case config.OpStackChainType:
-			client, clientErr := getOpStackClient(*selectedChainConfig)
+			client, clientErr := getOpStackClient(appConfig.RPCURL, *selectedChainConfig)
 			if clientErr != nil {
 				_ = tmpl.ExecuteTemplate(w, "result.html", map[string]any{"Error": "Failed to create OpStack client: " + clientErr.Error()})
 				return
 			}
 			chainClient = client
 		case config.ArbitrumChainType:
-			client, clientErr := getArbitrumClient(*selectedChainConfig)
+			client, clientErr := getArbitrumClient(appConfig.RPCURL, *selectedChainConfig)
 			if clientErr != nil {
 				_ = tmpl.ExecuteTemplate(w, "result.html", map[string]any{"Error": "Failed to create Arbitrum client: " + clientErr.Error()})
 				return
@@ -164,24 +173,24 @@ func main() {
 	}
 }
 
-func getOpStackClient(chainConfig config.Chain) (*l2.OpStackClient, error) {
+func getOpStackClient(ethRPC string, chainConfig config.Chain) (*l2.OpStackClient, error) {
 	if chainConfig.OpStackConfig == nil {
 		return nil, fmt.Errorf("opstack config is nil for chain %s", chainConfig.Name)
 	}
 
 	return l2.NewOpStackClient(
-		chainConfig.RPCURL,
+		ethRPC,
 		chainConfig.OpStackConfig.OptimismPortalAddress,
 	)
 }
 
-func getArbitrumClient(chainConfig config.Chain) (*l2.ArbitrumClient, error) {
+func getArbitrumClient(ethRPC string, chainConfig config.Chain) (*l2.ArbitrumClient, error) {
 	if chainConfig.Arbitrum == nil {
 		return nil, fmt.Errorf("arbitrum config is nil for chain %s", chainConfig.Name)
 	}
 
 	return l2.NewArbitrumClient(
-		chainConfig.RPCURL,
+		ethRPC,
 		chainConfig.Arbitrum.DelayedInboxAddress,
 	)
 }

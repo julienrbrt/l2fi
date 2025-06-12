@@ -69,11 +69,23 @@
 <script>
   // Function to trigger BSOD
   function triggerBSOD(errorType, errorMessage) {
-    const params = new URLSearchParams({
-      type: errorType,
-      message: errorMessage,
-    });
-    window.location.href = `/bsod?${params.toString()}`;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/bsod";
+    form.style.display = "none";
+
+    const typeInput = document.createElement("input");
+    typeInput.name = "type";
+    typeInput.value = errorType;
+    form.appendChild(typeInput);
+
+    const messageInput = document.createElement("input");
+    messageInput.name = "message";
+    messageInput.value = errorMessage;
+    form.appendChild(messageInput);
+
+    document.body.appendChild(form);
+    form.submit();
   }
 
   async function signAndSend(txJson) {

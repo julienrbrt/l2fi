@@ -22,7 +22,6 @@ type ArbitrumConfig struct {
 type Chain struct {
 	Name          string          `yaml:"name"`
 	DisplayName   string          `yaml:"display_name,omitempty"`
-	RPCURL        string          `yaml:"rpc_url"`
 	OpStackConfig *OpStackConfig  `yaml:"opstack,omitempty"`
 	Arbitrum      *ArbitrumConfig `yaml:"arbitrum,omitempty"`
 }
@@ -54,6 +53,7 @@ func (c *Chain) Type() (string, error) {
 
 // AppConfig holds the overall application configuration, including all chains.
 type AppConfig struct {
+	RPCURL string  `yaml:"rpc_url"`
 	Chains []Chain `yaml:"chains"`
 }
 
@@ -81,6 +81,10 @@ func LoadConfig(configPath string) (*AppConfig, error) {
 }
 
 func validateConfig(cfg *AppConfig) error {
+	if cfg.RPCURL == "" {
+		return fmt.Errorf("rpc_url cannot be empty")
+	}
+
 	if len(cfg.Chains) == 0 {
 		return fmt.Errorf("no chains configured")
 	}
@@ -88,10 +92,6 @@ func validateConfig(cfg *AppConfig) error {
 	for i, chain := range cfg.Chains {
 		if chain.Name == "" {
 			return fmt.Errorf("chain at index %d missing name", i)
-		}
-
-		if chain.RPCURL == "" {
-			return fmt.Errorf("chain '%s' missing rpc_url", chain.Name)
 		}
 
 		chainType, err := chain.Type()

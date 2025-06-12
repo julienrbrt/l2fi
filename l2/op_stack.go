@@ -31,7 +31,6 @@ func NewOpStackClient(rpcURL string, optimismPortalAddress string) (*OpStackClie
 	}
 
 	portalAddr := common.HexToAddress(optimismPortalAddress)
-
 	optimismPortal, err := bindings.NewOptimismPortal(
 		portalAddr,
 		client,
@@ -56,19 +55,6 @@ func (o *OpStackClient) BuildForceInclusionTx(
 	value *big.Int,
 	l2GasLimit uint64,
 ) (string, error) {
-	// Use default L1 gas limit of 200000
-	return o.BuildForceInclusionTxWithL1GasLimit(fromAddress, toAddress, data, value, 200000, l2GasLimit)
-}
-
-// BuildForceInclusionTxWithL1GasLimit builds a forced inclusion transaction with a configurable L1 gas limit.
-// It returns a JSON string compatible with ethers.js for client-side signing.
-func (o *OpStackClient) BuildForceInclusionTxWithL1GasLimit(
-	fromAddress string,
-	toAddress string,
-	data string,
-	value *big.Int,
-	l1GasLimit, l2GasLimit uint64,
-) (string, error) {
 	if !common.IsHexAddress(fromAddress) {
 		return "", fmt.Errorf("invalid from address: %s", fromAddress)
 	}
@@ -87,10 +73,7 @@ func (o *OpStackClient) BuildForceInclusionTxWithL1GasLimit(
 		callData = common.FromHex(data)
 	}
 
-	nonce, err := o.client.PendingNonceAt(
-		context.Background(),
-		from,
-	)
+	nonce, err := o.client.PendingNonceAt(context.Background(), from)
 	if err != nil {
 		return "", fmt.Errorf("failed to get nonce: %w", err)
 	}
@@ -106,7 +89,7 @@ func (o *OpStackClient) BuildForceInclusionTxWithL1GasLimit(
 			From:     from,
 			Nonce:    big.NewInt(int64(nonce)),
 			GasPrice: gasPrice,
-			GasLimit: l1GasLimit, // configurable L1 gas limit
+			GasLimit: 200000,
 			Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
 				// transaction is unsigned; must be signed by the client
 				return t, nil
@@ -130,7 +113,6 @@ func (o *OpStackClient) BuildForceInclusionTxWithL1GasLimit(
 		"gasLimit": fmt.Sprintf("0x%x", tx.Gas()),
 		"gasPrice": fmt.Sprintf("0x%x", tx.GasPrice()),
 		"nonce":    fmt.Sprintf("0x%x", tx.Nonce()),
-		"type":     fmt.Sprintf("0x%x", tx.Type()),
 	}
 
 	txData, err := json.Marshal(ethersTransaction)

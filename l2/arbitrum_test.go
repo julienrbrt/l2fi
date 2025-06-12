@@ -7,7 +7,3 @@ import (
 func TestArbitrumForceInclusion_BuildForceInclusionTx(t *testing.T) {
 	t.Skip()
 }
-
-func TestArbitrumABI(t *testing.T) {
-	t.Skip()
-}

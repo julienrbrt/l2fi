@@ -40,7 +40,7 @@ func TestOptimismForceInclusion_BuildForceInclusionTx(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				rpcURL        = "https://mainnet.optimism.io" // Example RPC URL
+				rpcURL        = "https://mainnet.optimism.io"
 				portalAddress = "0x420"
 			)
 

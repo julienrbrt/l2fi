@@ -76,3 +76,4 @@ Both methods require paying L1 gas fees but guarantee transaction inclusion when
 - [Optimism: Forced Transactions](https://docs.optimism.io/stack/transactions/forced-transaction)
 - [Optimism: OptimismPortal Contract](https://github.com/ethereum-optimism/optimism/blob/111f3f3a3a2881899662e53e0f1b2f845b188a38/packages/contracts-bedrock/src/L1/OptimismPortal.sol#L209)
 - [Optimism L2 Registry](https://github.com/ethereum-optimism/superchain-registry/tree/main/superchain/configs)
+- [Arbitrum: Force Inclusion](https://docs.arbitrum.io/how-arbitrum-works/sequencer)
