@@ -9,43 +9,16 @@ A simple UI to force inclusion of transactions on L2 networks when the sequencer
 - [HTMX](https://htmx.org) for dynamic interactions - [Source](https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js)
 - [Ethers.js](https://docs.ethers.io) for wallet integration - [Source](https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.5/ethers.umd.min.js)
 
+> [!note]
+> This project did not require the usage of Go at all, but I generally prefer
+> using Go and Go templates for web applications.
+
 ## Setup
 
-1. **Install dependencies:**
-
-   ```bash
-   # Install Go dependencies
-   go mod download
-   
-   # Install Node.js dependencies for Tailwind CSS
-   npm install
-   ```
-
-2. **Set up environment variables:**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your Ethereum mainnet RPC URL
-   ```
-
-3. **Build CSS:**
-
-   ```bash
-   make build-css
-   ```
-
-4. **Build and run:**
-
-   ```bash
-   make build
-   ./l2fi
-   ```
-
-   Or run directly:
-
-   ```bash
-   go run .
-   ```
+```bash
+make build
+./l2fi
+```
 
 ## Usage
 
@@ -56,9 +29,9 @@ A simple UI to force inclusion of transactions on L2 networks when the sequencer
    - **Value**: Amount in Wei to send
    - **Data**: Optional transaction data (hex format)
    - **L2 Gas Limit**: Gas limit for the L2 transaction
-4. Click "Build Force Inclusion Transaction"
+4. Click "Build L1 Transaction"
 5. Review the generated transaction
-6. Click "Sign with MetaMask" to submit the transaction
+6. Click "Sign with wallet" to submit the transaction
 
 ### CSS Development
 
@@ -71,22 +44,22 @@ make build-css-watch
 ### Project Structure
 
 ```
-├── main.go              # HTTP server and routes
-├── l2/                  # L2-specific force inclusion logic
-│   ├── l2.go           # Common interface
+├── main.go             # HTTP server and routes
+├── l2/                 # L2-specific force inclusion logic
+│   ├── client.go       # Common interface
 │   ├── optimism.go     # Optimism implementation
 │   └── arbitrum.go     # Arbitrum implementation
 ├── templates/          # HTML templates
 ├── static/             # Static assets (CSS, JS)
-└── Makefile           # Build targets
+└── Makefile            # Build targets
 ```
 
 ## How Force Inclusion Works
 
 ### Optimism
 
-- Uses the L1CrossDomainMessenger contract on Ethereum mainnet
-- Calls `sendMessage()` to queue a transaction that will be included in the next L2 block
+- Uses the OptimismPortal contract on Ethereum mainnet
+- Calls `DepositTransaction()` to queue a transaction that will be included in the next L2 block
 - The transaction bypasses the sequencer and is forced to be included
 
 ### Arbitrum  
