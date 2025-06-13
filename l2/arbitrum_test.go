@@ -56,10 +56,11 @@ func TestArbitrumForceInclusion_BuildForceInclusionTx(t *testing.T) {
 		fromAddress := "0x742d35cC6600C91D844c4c0C7A7D26b2b39d3c07"
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				rpcURL           = "https://arb1.arbitrum.io/rpc"
+				ethRPC           = "https://eth.llamarpc.com"
+				arbRPC           = "https://arb1.arbitrum.io/rpc"
 				delayedInboxAddr = "0x4Fb6e0c9c2c8e0b2e0b2e0b2e0b2e0b2e0b2e0b2" // dummy address
 			)
-			a, err := l2.NewArbitrumClient(rpcURL, delayedInboxAddr)
+			a, err := l2.NewArbitrumClient(ethRPC, arbRPC, delayedInboxAddr)
 			require.NoError(t, err)
 
 			got, err := a.BuildForceInclusionTx(fromAddress, tt.toAddress, tt.data, tt.amount, tt.gasLimit)

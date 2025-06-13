@@ -15,6 +15,7 @@ type OpStackConfig struct {
 
 // ArbitrumConfig holds Arbitrum-specific chain configuration.
 type ArbitrumConfig struct {
+	RPCURL              string `yaml:"rpc_url,omitempty"`
 	DelayedInboxAddress string `yaml:"delayed_inbox_address,omitempty"`
 }
 

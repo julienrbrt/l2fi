@@ -103,8 +103,10 @@ chains:
   - name: "arbitrum"
     display_name: "Arbitrum One"
     arbitrum:
+      rpc_url: "https://arb1.arbitrum.io/rpc"
       delayed_inbox_address: "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f"
   - name: "arbitrum"
     display_name: "Arbitrum Nova"
     arbitrum:
+      rpc_url: "https://nova.arbitrum.io/rpc"
       delayed_inbox_address: "0xc4448b71118c9071Bcb9734A0EAc55D18A153949"

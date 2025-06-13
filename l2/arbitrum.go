@@ -16,16 +16,23 @@ var _ L2 = (*ArbitrumClient)(nil)
 
 // ArbitrumClient handles Arbitrum-specific logic
 type ArbitrumClient struct {
-	client              *ethclient.Client
+	ethClient      *ethclient.Client
+	arbitrumClient *ethclient.Client
+
 	delayedInboxAddress common.Address
 	inbox               *Inbox
 }
 
 // NewArbitrumClient creates a new ArbitrumClient instance.
-func NewArbitrumClient(rpcURL string, delayedInboxAddress string) (*ArbitrumClient, error) {
-	client, err := ethclient.Dial(rpcURL)
+func NewArbitrumClient(ethRPCURL, arbitrumRPCURL string, delayedInboxAddress string) (*ArbitrumClient, error) {
+	client, err := ethclient.Dial(ethRPCURL)
 	if err != nil {
 		return nil, err
+	}
+
+	arbitrumClient, err := ethclient.Dial(arbitrumRPCURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to Arbitrum RPC: %w", err)
 	}
 
 	delayedAddr := common.HexToAddress(delayedInboxAddress)
@@ -35,7 +42,8 @@ func NewArbitrumClient(rpcURL string, delayedInboxAddress string) (*ArbitrumClie
 	}
 
 	return &ArbitrumClient{
-		client:              client,
+		ethClient:           client,
+		arbitrumClient:      arbitrumClient,
 		delayedInboxAddress: delayedAddr,
 		inbox:               inbox,
 	}, nil
@@ -68,25 +76,27 @@ func (a *ArbitrumClient) BuildForceInclusionTx(
 		callData = common.FromHex(data)
 	}
 
-	nonce, err := a.client.PendingNonceAt(context.Background(), from)
+	nonce, err := a.ethClient.PendingNonceAt(context.Background(), from)
 	if err != nil {
 		return "", fmt.Errorf("failed to get nonce: %w", err)
 	}
 
-	gasPrice, err := a.client.SuggestGasPrice(context.Background())
+	gasPrice, err := a.ethClient.SuggestGasPrice(context.Background())
 	if err != nil {
 		return "", fmt.Errorf("failed to get gas price: %w", err)
 	}
 
-	// Arbitrum CreateRetryableTicket params
-	// For simplicity, set maxSubmissionCost, maxFeePerGas to gasPrice, refund addresses to sender
-	maxSubmissionCost := gasPrice
-	excessFeeRefundAddress := from
-	callValueRefundAddress := from
-	maxFeePerGas := gasPrice
-	l2CallValue := value
+	arbGasPrice, err := a.arbitrumClient.SuggestGasPrice(context.Background())
+	if err != nil {
+		return "", fmt.Errorf("failed to get Arbitrum gas price: %w", err)
+	}
 
-	tx, err := a.inbox.CreateRetryableTicket(
+	arbNonce, err := a.arbitrumClient.PendingNonceAt(context.Background(), from)
+	if err != nil {
+		return "", fmt.Errorf("failed to get nonce: %w", err)
+	}
+
+	tx, err := a.inbox.SendL1FundedUnsignedTransaction(
 		&bind.TransactOpts{
 			From:     from,
 			Nonce:    big.NewInt(int64(nonce)),
@@ -98,13 +108,10 @@ func (a *ArbitrumClient) BuildForceInclusionTx(
 			NoSend: true,
 			// Value:  value,
 		},
-		to,
-		l2CallValue,
-		maxSubmissionCost,
-		excessFeeRefundAddress,
-		callValueRefundAddress,
 		big.NewInt(int64(l2GasLimit)),
-		maxFeePerGas,
+		arbGasPrice,
+		big.NewInt(int64(arbNonce)),
+		to,
 		callData,
 	)
 	if err != nil {

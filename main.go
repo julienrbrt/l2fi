@@ -207,6 +207,7 @@ func getArbitrumClient(ethRPC string, chainConfig config.Chain) (*l2.ArbitrumCli
 
 	return l2.NewArbitrumClient(
 		ethRPC,
+		chainConfig.Arbitrum.RPCURL,
 		chainConfig.Arbitrum.DelayedInboxAddress,
 	)
 }
