@@ -10,6 +10,7 @@ RUN apk add --no-cache \
     make
 
 # Copy source code
+COPY config.yaml .
 COPY . .
 
 # Build the application
@@ -17,4 +18,4 @@ RUN make build
 
 EXPOSE 8080
 
-CMD ["./l2fi"]
+CMD ["./l2fi", "-port", "8080", "-config", "config.yaml"]
