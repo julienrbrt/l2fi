@@ -66,28 +66,8 @@
   <div id="signStatus" class="min-h-[20px] text-xs"></div>
 </div>
 
+<script src="/static/js/bsod.js"></script>
 <script>
-  // Function to trigger BSOD
-  function triggerBSOD(errorType, errorMessage) {
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "/bsod";
-    form.style.display = "none";
-
-    const typeInput = document.createElement("input");
-    typeInput.name = "type";
-    typeInput.value = errorType;
-    form.appendChild(typeInput);
-
-    const messageInput = document.createElement("input");
-    messageInput.name = "message";
-    messageInput.value = errorMessage;
-    form.appendChild(messageInput);
-
-    document.body.appendChild(form);
-    form.submit();
-  }
-
   async function signAndSend(txJson) {
     const button = document.getElementById("signButton");
     const status = document.getElementById("signStatus");

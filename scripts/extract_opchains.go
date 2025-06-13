@@ -20,6 +20,8 @@ type ChainConfig struct {
 }
 
 func main() {
+	log.Print("Clone this repo: https://github.com/ethereum-optimism/superchain-registry/tree/main/superchain/configs/mainnet in order to get the opstack chain configs.")
+
 	dir := flag.String("dir", ".", "Directory containing opstack chain configs")
 	flag.Parse()
 

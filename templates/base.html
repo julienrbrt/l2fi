@@ -8,6 +8,7 @@
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
     <script src="/static/js/htmx.min.js"></script>
     <script src="/static/js/ethers.umd.min.js"></script>
+    <script src="/static/js/bsod.js"></script>
     <style>
       body {
         font-family: "MS Sans Serif", sans-serif; /* Classic Win95 font */
@@ -267,7 +268,7 @@
                 <label
                   for="to_address"
                   class="block text-xs text-black mb-1 font-bold"
-                  >📍 L2 Recipient Address:</label
+                  >📍 L2 Recipient/Contract Address:</label
                 >
                 <input
                   type="text"
@@ -418,6 +419,10 @@
         <a href="https://julien.rbrt.fr" class="text-blue-700 hover:underline"
           >julien.rbrt.fr</a
         >
+        <span class="text-gray-500">|</span>
+        <a href="https://binary.builders" class="text-blue-700 hover:underline"
+          >binary.builders</a
+        >
       </p>
     </footer>
 
@@ -425,15 +430,6 @@
       // Global variables
       let userAddress = null;
       let provider = null;
-
-      // Function to trigger BSOD
-      function triggerBSOD(errorType, errorMessage) {
-        const params = new URLSearchParams({
-          type: errorType,
-          message: errorMessage,
-        });
-        window.location.href = `/bsod?${params.toString()}`;
-      }
 
       // Connect to wallet on page load
       async function connectWallet() {
@@ -562,6 +558,10 @@
       // Initialize when page loads
       document.addEventListener("DOMContentLoaded", function () {
         connectWallet();
+        // If redirected from BSOD, force disconnect UI
+        if (window.location.pathname === "/bsod") {
+          disconnectWallet();
+        }
       });
     </script>
   </body>

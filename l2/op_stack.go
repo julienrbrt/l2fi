@@ -95,6 +95,7 @@ func (o *OpStackClient) BuildForceInclusionTx(
 				return t, nil
 			},
 			NoSend: true,
+			// Value: value,
 		},
 		to,
 		value,
