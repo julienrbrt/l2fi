@@ -190,8 +190,14 @@
           <div class="win95-border-inset bg-white p-3 text-xs">
             <div class="font-bold mb-2 text-blue-800">🔗 Wallet Connection</div>
             <div id="walletStatus" class="text-gray-700">
-              <div class="text-center py-2">
-                <div class="text-orange-600">⏳ Connecting to wallet...</div>
+              <div class="text-gray-600 text-center py-2">
+                <div class="font-bold">🔌 Wallet Disconnected</div>
+                <button
+                  onclick="connectWallet()"
+                  class="win95-button text-xs mt-2"
+                >
+                  🔗 Connect Wallet
+                </button>
               </div>
             </div>
           </div>
@@ -554,15 +560,6 @@
           window.location.reload();
         });
       }
-
-      // Initialize when page loads
-      document.addEventListener("DOMContentLoaded", function () {
-        connectWallet();
-        // If redirected from BSOD, force disconnect UI
-        if (window.location.pathname === "/bsod") {
-          disconnectWallet();
-        }
-      });
     </script>
   </body>
 </html>
