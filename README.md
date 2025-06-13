@@ -16,8 +16,16 @@ A simple UI to force inclusion of transactions on L2 networks when the sequencer
 ## Setup
 
 ```bash
+go install github.com/julienrbrt/l2fi@latest
+l2fi -config config.yaml
+```
+
+Or
+
+```bash
+git clone https://github.com/julienrbrt/l2fi
 make build
-./l2fi
+./l2fi -config config.yaml
 ```
 
 ## Usage
