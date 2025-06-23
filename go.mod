@@ -3,7 +3,7 @@ module github.com/julienrbrt/l2fi
 go 1.23.0
 
 require (
-	github.com/ethereum-optimism/optimism v1.13.3
+	github.com/ethereum-optimism/optimism v1.13.4
 	github.com/ethereum/go-ethereum v1.15.11
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -39,6 +39,5 @@ require (
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
