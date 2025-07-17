@@ -46,8 +46,8 @@ github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 h1:rpfIENRNNilwHwZeG5+P150SMrnN
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0/go.mod h1:v57UDF4pDQJcEfFUCRop3lJL149eHGSe9Jvczhzjo/0=
 github.com/deepmap/oapi-codegen v1.8.2 h1:SegyeYGcdi0jLLrpbCMoJxnUUn8GBXHsvr4rbzjuhfU=
 github.com/deepmap/oapi-codegen v1.8.2/go.mod h1:YLgSKSDv/bZQB7N4ws6luhozi3cEdRktEqrX88CvjIw=
-github.com/ethereum-optimism/optimism v1.13.3 h1:rfPx7OembMnoEASU1ozA/Foa7Am7UA+h0SB+OUrxn7s=
-github.com/ethereum-optimism/optimism v1.13.3/go.mod h1:WrVFtk3cP45tvHs7MARn9KGQu35XIoXo/IOWU6K/rzk=
+github.com/ethereum-optimism/optimism v1.13.5 h1:ETL13PvTVps7Y7ZeNMG3KnwFF7GbEB9Ur/q1LdXp80Q=
+github.com/ethereum-optimism/optimism v1.13.5/go.mod h1:+8BrJe6eeys3M4bDLKul3e8ui4vwHppq9mgUqVMXZhU=
 github.com/ethereum/c-kzg-4844/v2 v2.1.0 h1:gQropX9YFBhl3g4HYhwE70zq3IHFRgbbNPw0Shwzf5w=
 github.com/ethereum/c-kzg-4844/v2 v2.1.0/go.mod h1:TC48kOKjJKPbN7C++qIgt0TJzZ70QznYR7Ob+WXl57E=
 github.com/ethereum/go-ethereum v1.15.11 h1:JK73WKeu0WC0O1eyX+mdQAVHUV+UR1a9VB/domDngBU=
