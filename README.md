@@ -2,6 +2,8 @@
 
 A simple UI to force inclusion of transactions on L2 networks when the sequencer is down or censoring transactions.
 
+![img](./preview.png)
+
 ## Tech Stack
 
 - Go with Chi router
@@ -70,7 +72,7 @@ make build-css-watch
 - Calls `DepositTransaction()` to queue a transaction that will be included in the next L2 block
 - The transaction bypasses the sequencer and is forced to be included
 
-### Arbitrum  
+### Arbitrum
 
 - Uses the Delayed Inbox contract on Ethereum mainnet
 - Calls `sendL2Message()` to submit a transaction directly to L2
